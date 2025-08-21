@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import type { Post } from '../types';
-import { api } from '../services/api';
+import { api } from '../services/mockApi';
 import { useAuth } from '../context/AuthContext';
 import Spinner from '../components/Spinner';
 
@@ -14,6 +14,7 @@ const BlogPostPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const fetchPost = useCallback(async () => {
     if (!postId) return;
@@ -23,8 +24,12 @@ const BlogPostPage: React.FC = () => {
       const data = await api.getPostById(postId);
       setPost(data);
     } catch (err) {
-      setError('Post not found.');
-      navigate('/404');
+      console.error("Error fetching post:", err);
+      if (err instanceof Error && err.message.toLowerCase().includes('not found')) {
+        navigate('/404');
+      } else {
+        setError('An error occurred while fetching the post.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -37,12 +42,17 @@ const BlogPostPage: React.FC = () => {
   const handleDelete = async () => {
     if (!post || !user || !token) return;
     if (window.confirm('Are you sure you want to delete this post?')) {
+      setDeleteError(null);
       setIsDeleting(true);
       try {
-        await api.deletePost(post.id, token);
+        await api.deletePost(String(post.id), token);
         navigate('/');
       } catch (err) {
-        alert('Failed to delete post. You may not have permission.');
+        let message = 'Failed to delete post. Please try again.';
+        if (err instanceof Error) {
+          message = err.message;
+        }
+        setDeleteError(message);
         setIsDeleting(false);
       }
     }
@@ -57,7 +67,7 @@ const BlogPostPage: React.FC = () => {
   };
 
   if (isLoading) return <Spinner />;
-  if (error) return <p className="text-center text-red-500">{error}</p>;
+  if (error) return <p className="text-center text-red-500 bg-red-50 p-4 rounded-md">{error}</p>;
   if (!post) return null;
 
   const isAuthor = isAuthenticated && user?.id === post.authorId;
@@ -72,17 +82,20 @@ const BlogPostPage: React.FC = () => {
           <span>Published on {formatDate(post.createdAt)}</span>
         </div>
         {isAuthor && (
-          <div className="mt-6 flex space-x-4">
-            <Link to={`/edit/${post.id}`} className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors">
-              Edit Post
-            </Link>
-            <button
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors disabled:bg-red-400"
-            >
-              {isDeleting ? 'Deleting...' : 'Delete Post'}
-            </button>
+          <div className="mt-6">
+            <div className="flex space-x-4">
+              <Link to={`/edit/${post.id}`} className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors">
+                Edit Post
+              </Link>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors disabled:bg-red-400"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Post'}
+              </button>
+            </div>
+            {deleteError && <p className="text-red-500 text-sm mt-2">{deleteError}</p>}
           </div>
         )}
       </header>

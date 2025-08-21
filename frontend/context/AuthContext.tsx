@@ -1,15 +1,14 @@
-
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import type { User } from '../types';
-import { api } from '../services/api';
+import { api } from '../services/mockApi';
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password_unused: string) => Promise<void>;
-  signup: (name: string, email: string, password_unused: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -35,16 +34,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = useCallback(async (email: string, password_unused: string) => {
-    const { user, token } = await api.login(email, password_unused);
+  const login = useCallback(async (email: string, password: string) => {
+    const { user, token } = await api.login(email, password);
     setUser(user);
     setToken(token);
     localStorage.setItem('authUser', JSON.stringify(user));
     localStorage.setItem('authToken', token);
   }, []);
 
-  const signup = useCallback(async (name: string, email: string, password_unused: string) => {
-    const { user, token } = await api.signup(name, email, password_unused);
+  const signup = useCallback(async (name: string, email: string, password: string) => {
+    const { user, token } = await api.signup(name, email, password);
     setUser(user);
     setToken(token);
     localStorage.setItem('authUser', JSON.stringify(user));

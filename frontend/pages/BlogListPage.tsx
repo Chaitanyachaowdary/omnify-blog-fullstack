@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { Post } from '../types';
-import { api } from '../services/api';
+import { api } from '../services/mockApi';
 import BlogPostCard from '../components/BlogPostCard';
 import Pagination from '../components/Pagination';
 import Spinner from '../components/Spinner';
@@ -22,8 +22,12 @@ const BlogListPage: React.FC = () => {
       setPosts(data.posts);
       setTotalPages(data.totalPages);
     } catch (err) {
-      console.error("Error fetching posts:", err); // For developer debugging
-      setError('An error occurred while fetching posts. Please try again later.');
+      console.error("Error fetching posts:", err);
+      let message = 'An error occurred while fetching posts. Please try again later.';
+      if (err instanceof Error) {
+        message = err.message;
+      }
+      setError(message);
     } finally {
       setIsLoading(false);
     }
