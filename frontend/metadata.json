@@ -1,0 +1,5 @@
+{
+  "name": "Omnify Blog Platform",
+  "description": "A modern, responsive blog application built with React and Tailwind CSS, allowing users to create, view, and manage blog posts with user authentication.",
+  "requestFramePermissions": []
+}
